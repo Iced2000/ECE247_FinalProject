@@ -1,6 +1,10 @@
 checkpoint/
+checkpoint_GAN/
 *.pkl
 *.pth
+*.gv
+*.png
 dataset/
 __pycache__/
-result/
+result_GAN/
+result_U/

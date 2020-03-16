@@ -1,6 +1,10 @@
 import torch
 import torch.nn as nn
 import torch.nn.init as init
+from torchviz import make_dot
+from graphviz import Digraph
+from graphviz import Source
+from torchsummary import summary
 
 def weights_init(m):
     if isinstance(m, nn.Conv2d):
@@ -21,10 +25,10 @@ class convModule(nn.Module):
         self.module = nn.Sequential(
             nn.Conv2d(inChannel, outChannel, kernel_size=3, padding=1),
             nn.BatchNorm2d(outChannel),
-            nn.ReLU(inplace=True),
+            nn.LeakyReLU(0.2, inplace=True),
             nn.Conv2d(outChannel, outChannel, kernel_size=3, padding=1),
             nn.BatchNorm2d(outChannel),
-            nn.ReLU(inplace=True)
+            nn.LeakyReLU(0.2, inplace=True),
         )
 
     def forward(self, x):
@@ -81,7 +85,38 @@ class UNet(nn.Module):
         out = self.outLayer(dec1)
         return out
 
+class Discriminator(nn.Module):
+    def __init__(self, channels=6):
+        super(Discriminator, self).__init__()
+
+        self.module = nn.Sequential(
+            nn.Conv2d(in_channels=channels, out_channels=128, kernel_size=4, stride=4, padding=1),
+            nn.BatchNorm2d(num_features=128),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(in_channels=128, out_channels=256, kernel_size=4, stride=4, padding=1),
+            nn.BatchNorm2d(num_features=256),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(in_channels=256, out_channels=512, kernel_size=4, stride=4, padding=1),
+            nn.BatchNorm2d(num_features=512),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(in_channels=512, out_channels=1, kernel_size=(4, 2), stride=1, padding=0),
+        )
+        self.apply(weights_init)
+
+    def forward(self, x):
+        return self.module(x).view(-1, 1)
+
 if __name__ == '__main__':
-    model = UNet()
-    x = torch.randn(2, 3, 256, 128)
-    print(model(x).size())
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    #model = UNet().to(device)
+    #x = torch.randn(2, 1, 256, 128)
+    #summary(model, (1, 256, 128))
+    #dot = make_dot(model(x), params=dict(model.named_parameters()))
+    #dot.render('tmp.gv', view=True)    
+    #print(model(x).size())
+    
+    model = Discriminator(6).to(device)
+    summary(model, (6, 256, 128))
+    #x = torch.randn(2, 6, 256, 128)
+    #print(model(x).size())
+    

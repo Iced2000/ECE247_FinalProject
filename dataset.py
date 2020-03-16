@@ -115,7 +115,7 @@ class EyeDataset(Dataset):
         """
 
         if os.path.isfile('{}.pkl'.format(path.split('/')[-1])):
-            self.images, self.labels = torch.load('{}.pkl'.format(path.split('/')[-1]))
+            self.images, self.labels, self.onehot = torch.load('{}.pkl'.format(path.split('/')[-1]))
 
         else:
             self.dataPath = os.path.join(path, 'data')
@@ -123,6 +123,7 @@ class EyeDataset(Dataset):
     
             self.images = []
             self.labels = []
+            self.onehot = []
     
             for _path, _, fns in os.walk(self.dataPath):
                 for fn in tqdm(fns):
@@ -131,9 +132,14 @@ class EyeDataset(Dataset):
 
                     imgTensor = transforms.functional.to_tensor(processImg(rawImg))
                     labelTensor = torch.from_numpy(img2label(processImg(rawLabel))).long()
+                    ohTensor = torch.from_numpy(img2onehot(processImg(rawLabel))).float()
+
+                    if labelTensor.sum() == 0:
+                        continue
                     
                     self.images.append(imgTensor)
                     self.labels.append(labelTensor)
+                    self.onehot.append(ohTensor)
 
                     if aug:
                         flipImg = ImageOps.mirror(rawImg)
@@ -141,28 +147,30 @@ class EyeDataset(Dataset):
 
                         flipImgTensor = transforms.functional.to_tensor(processImg(flipImg))
                         flipLabelTensor = torch.from_numpy(img2label(processImg(flipLabel))).long()
+                        flipOhTensor = torch.from_numpy(img2onehot(processImg(flipLabel))).float()
                     
                         self.images.append(flipImgTensor)
                         self.labels.append(flipLabelTensor)
+                        self.onehot.append(flipOhTensor)
             
-            torch.save((self.images, self.labels), '{}.pkl'.format(path.split('/')[-1]))
+            torch.save((self.images, self.labels, self.onehot), '{}.pkl'.format(path.split('/')[-1]))
         
         
     def __len__(self):
         return len(self.images)
 
     def __getitem__(self, idx):
-        return self.images[idx], self.labels[idx]
+        return self.images[idx], self.labels[idx], self.onehot[idx]
 
 if __name__ == '__main__':
-    path = './dataset/train'
+    path = './dataset/test'
     dset = EyeDataset(path)
     loader = DataLoader(dset,
                        batch_size=32,
                        shuffle=True,
                        num_workers=8,
                        pin_memory=False,
-                       drop_last=True)
-    #print(len(dset))
-    image, label = iter(loader).next()
-    print(image.size(), label.size())
+                       drop_last=False)
+
+    for i, (image, label, onehot) in enumerate(loader):
+        print(image.size(), label.size(), onehot.size())

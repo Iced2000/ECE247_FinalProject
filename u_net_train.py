@@ -107,7 +107,7 @@ for epoch in range(epoch0, epoch_num):
         for i in np.random.choice(32, sampleNum, replace=False):
             img_out.append(TF.to_tensor(onehot2img(output[i].detach().to('cpu').numpy())))
             img_gt.append(TF.to_tensor(label2img(label[i].detach().to('cpu').numpy())))
-        for i in np.random.choice(26, sampleNum, replace=False):
+        for i in np.random.choice(17, sampleNum, replace=False):
             img_out.append(TF.to_tensor(onehot2img(output_v[i].detach().to('cpu').numpy())))
             img_gt.append(TF.to_tensor(label2img(label_v[i].detach().to('cpu').numpy())))
-        vutils.save_image(torch.stack(img_out + img_gt), 'result/epoch_{}.png'.format(epoch+1), nrow=sampleNum*2)
+        vutils.save_image(torch.stack(img_out + img_gt), 'result_U/epoch_{}.png'.format(epoch+1), nrow=sampleNum*2)
