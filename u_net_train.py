@@ -8,21 +8,11 @@ import torchvision.transforms.functional as TF
 from torch.optim.lr_scheduler import StepLR
 import argparse
 from tqdm import tqdm
+import os
 
 from model import UNet
 from dataset import EyeDataset, onehot2img, label2img
 from loss import *
-"""
-ref:
-https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix
-https://github.com/taey16/pix2pixBEGAN.pytorch
-https://github.com/gokriznastic/SegAN/blob/master/train.py
-https://arxiv.org/pdf/1706.01805.pdf
-https://github.com/advaitsave/Multiclass-Semantic-Segmentation-CamVid/blob/master/.ipynb_checkpoints/Multiclass%20Semantic%20Segmentation%20using%20U-Net-checkpoint.ipynb
-https://github.com/usuyama/pytorch-unet
-https://github.com/mateuszbuda/brain-segmentation-pytorch/blob/master/loss.py
-https://github.com/JunMa11/SegLoss/tree/master/losses_pytorch
-"""
 
 pretrainedModel = ''
 lr = 1e-3
@@ -33,8 +23,11 @@ torch.manual_seed(1000)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 net = UNet().to(device)
 
-#criterion = nn.CrossEntropyLoss().to(device)
-#criterion = LovaszSoftmax().to(device)
+if not os.path.exists('./result_U'):
+    os.makedirs('./result_U', exist_ok=True)
+if not os.path.exists('./checkpoint'):
+    os.makedirs('./checkpoint', exist_ok=True)
+
 criterion = FocalLoss(nn.Softmax(1), gamma=1).to(device)
 optimizer = optim.Adam(net.parameters(), lr=lr, betas=(0.9, 0.999), weight_decay=0.0001)
 scheduler = StepLR(optimizer, step_size=300, gamma=0.5)
@@ -87,7 +80,7 @@ for epoch in range(epoch0, epoch_num):
     
     scheduler.step()
     loss_track.append((train_loss, val_loss))
-    torch.save(loss_track, 'loss.pth')
+    torch.save(loss_track, 'checkpoint/loss.pth')
     
     print('[{:4d}/{}] lr: {:.5f}, train_loss: {:.5f}, test_loss: {:.5f}'.format(epoch+1, epoch_num, optimizer.param_groups[0]['lr'], train_loss, val_loss))
     
@@ -97,7 +90,7 @@ for epoch in range(epoch0, epoch_num):
             'state_dict':net.state_dict(),
             'optimizer':optimizer.state_dict(),
             'scheduler':scheduler.state_dict(),
-        }, 'checkpoint/epoch_{}.pth'.format(epoch+1))
+        }, 'checkpoint/model.pth')
     
 
     

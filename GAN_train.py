@@ -8,6 +8,7 @@ import torchvision.transforms.functional as TF
 from torch.optim.lr_scheduler import StepLR
 import argparse
 from tqdm import tqdm
+import os
 
 from model import UNet, Discriminator
 from dataset import EyeDataset, onehot2img, label2img
@@ -25,10 +26,12 @@ D = Discriminator().to(device)
 print("G_params: {}".format(sum(p.numel() for p in G.parameters() if p.requires_grad)))
 print("D_params: {}".format(sum(p.numel() for p in D.parameters() if p.requires_grad)))
 
-#criterion = nn.CrossEntropyLoss().to(device)
-#criterion = LovaszSoftmax().to(device)
 criterion = FocalLoss(nn.Softmax(1), gamma=1).to(device)
-#optimizer = optim.Adam(net.parameters(), lr=lr, betas=(0.9, 0.999), weight_decay=0.0001)
+
+if not os.path.exists('./result_GAN'):
+    os.makedirs('./result_GAN', exist_ok=True)
+if not os.path.exists('./checkpoint_GAN'):
+    os.makedirs('./checkpoint_GAN', exist_ok=True)
 
 optimizer_G = optim.Adam(G.parameters(), lr=lr, betas=(0.9, 0.999), weight_decay=0.0001)
 optimizer_D = optim.RMSprop(D.parameters(), lr=5e-5)
@@ -103,7 +106,7 @@ for epoch in range(epoch0, epoch_num):
             val_loss += loss.item() / valSize
     
     loss_track.append((train_loss, loss_G, loss_D, val_loss))
-    torch.save(loss_track, 'loss.pth')
+    torch.save(loss_track, 'checkpoint_GAN/loss.pth')
     
     print('[{:4d}/{}], tr_ls: {:.5f}, G_ls: {:.5f}, D_ls: {:.5f}, te_ls: {:.5f}'.format(epoch+1, epoch_num, train_loss, loss_G, loss_D, val_loss))
     
@@ -114,7 +117,7 @@ for epoch in range(epoch0, epoch_num):
             'state_dict_D':D.state_dict(),
             'optimizer_G':optimizer_G.state_dict(),
             'optimizer_D':optimizer_D.state_dict(),
-        }, 'checkpoint_GAN/epoch_{}.pth'.format(epoch+1))
+        }, 'checkpoint_GAN/model.pth')
     
 
     

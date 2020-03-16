@@ -9,15 +9,20 @@ import torchvision.transforms as TT
 from torch.optim.lr_scheduler import StepLR
 import argparse
 from tqdm import tqdm
+import os
 
 from model import UNet
 from dataset import *
 from loss import *
 from metrics import pixel_accuracy, mean_IOU, f1_score
 
-model_unet = 'checkpoint/epoch_{}.pth'.format(151)
-model_GAN = 'checkpoint_GAN/epoch_{}.pth'.format(151)
+if not os.path.exists('./checkpoint_GAN'):
+    os.makedirs('./checkpoint_GAN', exist_ok=True)
+if not os.path.exists('./checkpoint'):
+    os.makedirs('./checkpoint', exist_ok=True)
 
+model_unet = 'checkpoint/model.pth'
+model_GAN = 'checkpoint_GAN/model.pth'
 
 torch.manual_seed(1000)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -63,9 +68,10 @@ IOU_GAN /= valSize
 F1_unet /= valSize
 F1_GAN /= valSize
 
-print("PA_unet: {}, PA_GAN: {}, IOU_unet: {}, IOU_GAN: {}".format(PA_unet, PA_GAN, IOU_unet, IOU_GAN))
+print("PA_unet: {}, PA_GAN: {}".format(PA_unet, PA_GAN))
+print("IOU_unet: {}, IOU_GAN: {}".format(IOU_unet, IOU_GAN))
 print("F1_unet: {}, F1_GAN: {}".format(F1_unet, F1_GAN))
-"""
+
 with torch.no_grad():
     img_ori, img_gt, img_unet, img_GAN = [], [], [], []
     sampleNum = 4
@@ -75,4 +81,3 @@ with torch.no_grad():
         img_unet.append(TF.to_tensor(onehot2img(output_unet[i])))
         img_GAN.append(TF.to_tensor(onehot2img(output_GAN[i])))
     vutils.save_image(torch.stack(img_ori + img_gt + img_unet + img_GAN), 'result.png', nrow=sampleNum)
-"""

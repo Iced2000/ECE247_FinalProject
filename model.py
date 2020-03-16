@@ -1,10 +1,6 @@
 import torch
 import torch.nn as nn
 import torch.nn.init as init
-from torchviz import make_dot
-from graphviz import Digraph
-from graphviz import Source
-from torchsummary import summary
 
 def weights_init(m):
     if isinstance(m, nn.Conv2d):
@@ -115,8 +111,8 @@ if __name__ == '__main__':
     #dot.render('tmp.gv', view=True)    
     #print(model(x).size())
     
-    model = Discriminator(6).to(device)
-    summary(model, (6, 256, 128))
+    #model = Discriminator(6).to(device)
+    #summary(model, (6, 256, 128))
     #x = torch.randn(2, 6, 256, 128)
     #print(model(x).size())
     
