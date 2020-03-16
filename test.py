@@ -34,7 +34,7 @@ net2.load_state_dict(torch.load(model_GAN)['state_dict_G'])
 
 val_path = "./dataset/test"
 val_dataset = EyeDataset(val_path)
-val_dataloader = DataLoader(val_dataset, batch_size=1, shuffle=False, num_workers=8, pin_memory=False)
+val_dataloader = DataLoader(val_dataset, batch_size=32, shuffle=False, num_workers=8, pin_memory=False)
 valSize = len(val_dataset)
 
 PA_unet = 0
